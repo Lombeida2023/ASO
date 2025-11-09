@@ -1,0 +1,23 @@
+#!/bin/bash
+apt update -y
+apt install vsftpd ftp inetutils-ftp -y
+
+cat <<EOF > /etc/vsftpd.conf
+listen=YES
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+local_umask=022
+chroot_local_user=YES
+allow_writeable_chroot=YES
+pam_service_name=vsftpd
+EOF
+
+adduser userftp --disabled-password --gecos ""
+echo "userftp:123456" | chpasswd
+mkdir -p /home/userftp/upload
+chown userftp:userftp /home/userftp/upload
+
+systemctl restart vsftpd
+systemctl enable vsftpd
+echo "[OK] FTP instalado y configurado ✅"

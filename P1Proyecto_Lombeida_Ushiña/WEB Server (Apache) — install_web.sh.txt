@@ -1,0 +1,9 @@
+#!/bin/bash
+apt update -y
+apt install apache2 -y
+
+echo "<h1>Servidor Web funcionando ✅</h1>" > /var/www/html/index.html
+
+systemctl restart apache2
+systemctl enable apache2
+echo "[OK] Web Apache instalado ✅"

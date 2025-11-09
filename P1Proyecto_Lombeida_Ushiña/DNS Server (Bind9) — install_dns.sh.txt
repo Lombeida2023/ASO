@@ -1,0 +1,27 @@
+#!/bin/bash
+apt update -y
+apt install bind9 -y
+
+cat <<EOF > /etc/bind/named.conf.local
+zone "lab.local" {
+    type master;
+    file "/etc/bind/db.lab.local";
+};
+EOF
+
+cat <<EOF > /etc/bind/db.lab.local
+$TTL 604800
+@   IN  SOA server.lab.local. admin.lab.local. (
+        2 ; Serial
+        604800 ; Refresh
+        86400 ; Retry
+        2419200 ; Expire
+        604800 ) ; Negative Cache TTL
+;
+@       IN  NS      server.lab.local.
+server  IN  A       192.168.50.20
+EOF
+
+systemctl restart bind9
+systemctl enable bind9
+echo "[OK] DNS instalado y configurado ✅"

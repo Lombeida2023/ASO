@@ -1,0 +1,21 @@
+#!/bin/bash
+apt update -y
+apt install isc-dhcp-server -y
+
+cat <<EOF > /etc/dhcp/dhcpd.conf
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+subnet 192.168.50.0 netmask 255.255.255.0 {
+  range 192.168.50.50 192.168.50.100;
+  option routers 192.168.50.1;
+  option domain-name-servers 192.168.50.11;
+  option domain-name "lab.local";
+}
+EOF
+
+echo "INTERFACESv4=\"eth0\"" > /etc/default/isc-dhcp-server
+
+systemctl restart isc-dhcp-server
+systemctl enable isc-dhcp-server
+echo "[OK] DHCP instalado y configurado ✅"
