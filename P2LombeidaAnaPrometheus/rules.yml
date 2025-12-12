@@ -1,0 +1,66 @@
+groups:
+
+- name: HostAlerts
+  rules:
+
+  - alert: HostDown
+    expr: up{job="node_exporter"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Host {{ $labels.instance }} está caído"
+      description: "El Node Exporter en {{ $labels.instance }} ha estado inactivo por más de 1 minuto. ¡El host podría estar caído!"
+
+  - alert: HighCPULoad
+    expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Alta carga de CPU en {{ $labels.instance }}"
+      description: "La carga de CPU en {{ $labels.instance }} ha superado el 80% durante los últimos 5 minutos."
+
+  - alert: LowDiskSpace
+    expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Poco espacio en disco en {{ $labels.instance }}"
+      description: "El espacio libre en disco en la raíz (/) de {{ $labels.instance }} es menor al 10%."
+
+
+- name: SLOAlerts
+  rules:
+
+  - alert: ServiceDown
+    expr: probe_success{job="blackbox-http"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Servicio caído"
+      description: "El endpoint monitoreado por Blackbox no responde por más de 2 minutos."
+
+  - alert: SLOAvailabilityLow
+    expr: (1 - rate(prometheus_http_requests_total{code=~"5.."}[5m])
+           / rate(prometheus_http_requests_total[5m])) * 100 < 99
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "SLO de disponibilidad incumplido"
+      description: "La disponibilidad cayó por debajo del 99%. Revisar estado de contenedores o red."
+
+  - alert: SLOLatencyHigh
+    expr: histogram_quantile(
+            0.95,
+            rate(prometheus_http_request_duration_seconds_bucket[5m])
+          ) > 0.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Latencia P95 alta"
+      description: "La latencia P95 superó 500 ms durante más de 10 minutos."
